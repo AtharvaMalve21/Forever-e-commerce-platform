@@ -7,6 +7,7 @@ const connectDB = require("./config/db");
 
 //route handlers
 const userRoutes = require("./routes/userRoutes");
+const productRoutes = require("./routes/productRoutes");
 
 dotenv.config();
 const app = express();
@@ -15,6 +16,7 @@ const PORT = process.env.PORT || 3000;
 //middleware configurations
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use("/uploads", express.static("uploads"));
 app.use(
   cors({
     origin: process.env.FRONTEND_URI,
@@ -28,6 +30,7 @@ connectDB();
 
 //route handlers
 app.use("/api/user", userRoutes);
+app.use("/api/product", productRoutes);
 
 app.get("/", (req, res) => {
   res.json({
