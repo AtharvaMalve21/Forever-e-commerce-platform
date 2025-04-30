@@ -8,8 +8,6 @@ exports.addProduct = async (req, res) => {
     const userId = req.user._id;
     const user = await User.findById(userId);
 
-    console.log(user);
-
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -33,10 +31,8 @@ exports.addProduct = async (req, res) => {
       category,
       subCategory,
       sizes,
+      bestSeller,
     } = req.body;
-
-
-    console.log(req.body);
 
     const photos = req.files.map((file) => file.path);
 
@@ -66,6 +62,7 @@ exports.addProduct = async (req, res) => {
       subCategory,
       sizes,
       photos,
+      bestSeller: bestSeller === "true",
     });
 
     //return res
@@ -191,6 +188,31 @@ exports.filterProductsByCategoryAndSubCategory = async (req, res) => {
   }
 };
 
+exports.filterByPrice = async (req, res) => {
+  try {
+    const { price } = req.query;
+    const products = await Product.find({
+      price: price,
+    });
+    if (products.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No Product found.",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      data: products,
+      message: "Products data fetched.",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
 exports.viewProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -238,15 +260,7 @@ exports.deleteProduct = async (req, res) => {
 
     const { id } = req.params;
 
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(400).json({
-        success: false,
-        message: "No Product found.",
-      });
-    }
-
-    await product.deleteOne({ _id: id });
+    await Product.findByIdAndDelete(id);
 
     return res.status(200).json({
       success: true,

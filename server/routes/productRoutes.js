@@ -6,6 +6,7 @@ const {
   addProduct,
   getAllProducts,
   filterProductsByCategory,
+  filterByPrice,
   filterProductsBySubCategory,
   filterProductsByCategoryAndSubCategory,
   viewProduct,
@@ -24,6 +25,8 @@ router.post(
 );
 
 router.get("/", getAllProducts);
+
+router.get("/filter/price", filterByPrice);
 
 router.get("/filter/category", filterProductsByCategory);
 
