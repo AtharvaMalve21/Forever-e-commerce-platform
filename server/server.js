@@ -1,13 +1,16 @@
 const express = require("express");
 const dotenv = require("dotenv");
+
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+
 const bodyParser = require("body-parser");
 const connectDB = require("./config/db");
 
 //route handlers
 const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
+
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 
