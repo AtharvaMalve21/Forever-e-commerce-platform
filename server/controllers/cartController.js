@@ -5,6 +5,7 @@ const Product = require("../models/productModel");
 //only users can access this route
 exports.addToCart = async (req, res) => {
   try {
+    
     //authenticate user
     const userId = req.user._id;
     const user = await User.findById(userId);

@@ -1,6 +1,8 @@
 const Order = require("../models/orderModel");
 const User = require("../models/userModel");
 const Cart = require("../models/cartModel");
+const ordersPlacedEmailTemplate = require("../utils/ordersPlacedEmailTemplate");
+const transporter = require("../config/mailer");
 
 //future scope - Integrate stripe payments
 
@@ -27,11 +29,13 @@ exports.createOrder = async (req, res) => {
         message: "Please fill in all the required fields.",
       });
     }
-    
+
     //find the cart
     const { id } = req.params;
 
-    const cart = await Cart.findById(id);
+    const cart = await Cart.findById(id).populate("products.productId");
+
+    console.log(cart);
 
     if (!cart) {
       return res.status(400).json({
@@ -48,7 +52,11 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    const totalPrice = cart.products.reduce((acc, item) => acc + item.price, 0);
+    const totalPrice = cart.products.reduce((acc, item) => {
+      const price = item.productId?.price || 0;
+      const quantity = item.quantity || 1; // if you're storing quantity
+      return acc + price * quantity;
+    }, 0);
 
     //create order
     const order = await Order.create({
@@ -59,6 +67,20 @@ exports.createOrder = async (req, res) => {
       cart: cart._id,
       totalPrice: totalPrice,
       user: userId,
+    });
+
+    //send to email
+
+    await transporter.sendMail({
+      from: process.env.MAIL_HOST,
+      to: [user.email],
+      subject: "Orders Placed successfully",
+      html: ordersPlacedEmailTemplate(
+        name,
+        order._id,
+        shippingAddress,
+        totalPrice
+      ),
     });
 
     //return res
@@ -191,6 +213,17 @@ exports.updateStatus = async (req, res) => {
 //this route is for admins- can see all the orders
 exports.getAllOrdersForAdmin = async (req, res) => {
   try {
+    //authenticate user
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "No User found.",
+      });
+    }
+
     const orders = await Order.find({});
 
     return res.status(200).json({
@@ -221,7 +254,7 @@ exports.cancelOrder = async (req, res) => {
 
     const { id } = req.params;
 
-    const order = await Order.findOneAndDelete({
+    await Order.findOneAndDelete({
       _id: id,
       user: userId,
     });
